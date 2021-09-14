@@ -234,6 +234,7 @@ public:
 	void set_blend_shape_mode(BlendShapeMode p_mode);
 	BlendShapeMode get_blend_shape_mode() const;
 
+	void surface_update_region(int p_surface, RS::ArrayType array_type, int p_offset, const Vector<uint8_t> &p_data, uint64_t data_offset, uint64_t data_size);
 	void surface_update_vertex_region(int p_surface, int p_offset, const Vector<uint8_t> &p_data);
 	void surface_update_index_region(int p_surface, int p_offset, const Vector<uint8_t> &p_data);
 	void surface_update_attribute_region(int p_surface, int p_offset, const Vector<uint8_t> &p_data);

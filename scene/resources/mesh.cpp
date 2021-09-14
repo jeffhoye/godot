@@ -1553,6 +1553,12 @@ String ArrayMesh::surface_get_name(int p_idx) const {
 	return surfaces[p_idx].name;
 }
 
+void ArrayMesh::surface_update_region(int p_surface, RS::ArrayType array_type, int p_offset, const Vector<uint8_t> &p_data, uint64_t data_offset, uint64_t data_size) {
+	ERR_FAIL_INDEX(p_surface, surfaces.size());
+	RS::get_singleton()->mesh_surface_update_region(mesh, p_surface, array_type, p_offset, p_data, data_offset, data_size);
+	emit_changed();
+}
+
 void ArrayMesh::surface_update_vertex_region(int p_surface, int p_offset, const Vector<uint8_t> &p_data) {
 	ERR_FAIL_INDEX(p_surface, surfaces.size());
 	RS::get_singleton()->mesh_surface_update_vertex_region(mesh, p_surface, p_offset, p_data);

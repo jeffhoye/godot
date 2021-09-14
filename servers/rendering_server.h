@@ -337,6 +337,7 @@ public:
 	virtual void mesh_set_blend_shape_mode(RID p_mesh, BlendShapeMode p_mode) = 0;
 	virtual BlendShapeMode mesh_get_blend_shape_mode(RID p_mesh) const = 0;
 
+	virtual void mesh_surface_update_region(RID p_mesh, int p_surface, ArrayType array_type, int p_offset, const Vector<uint8_t> &p_data, uint64_t data_offset, uint64_t data_size) = 0;
 	virtual void mesh_surface_update_vertex_region(RID p_mesh, int p_surface, int p_offset, const Vector<uint8_t> &p_data) = 0;
 	virtual void mesh_surface_update_index_region(RID p_mesh, int p_surface, int p_offset, const Vector<uint8_t> &p_data) = 0;
 	virtual void mesh_surface_update_attribute_region(RID p_mesh, int p_surface, int p_offset, const Vector<uint8_t> &p_data) = 0;

@@ -2751,6 +2751,35 @@ RS::BlendShapeMode RendererStorageRD::mesh_get_blend_shape_mode(RID p_mesh) cons
 	return mesh->blend_shape_mode;
 }
 
+void RendererStorageRD::mesh_surface_update_region(RID p_mesh, int p_surface, RS::ArrayType array_type, int p_offset, const Vector<uint8_t> &p_data, uint64_t data_offset, uint64_t data_size) {
+	Mesh *mesh = mesh_owner.getornull(p_mesh);
+	ERR_FAIL_COND(!mesh);
+	ERR_FAIL_UNSIGNED_INDEX((uint32_t)p_surface, mesh->surface_count);
+	ERR_FAIL_COND(p_data.size() == 0);
+	// uint64_t data_size = p_data.size();
+	const uint8_t *r = p_data.ptr() + data_offset;
+	RID p_buffer;
+	switch(array_type) {
+		case RS::ARRAY_VERTEX:
+			p_buffer = mesh->surfaces[p_surface]->vertex_buffer;
+			break;
+		case RS::ARRAY_INDEX:
+			p_buffer = mesh->surfaces[p_surface]->index_buffer;
+			break;
+		// HMM... may need diferent enum for Attribute/Skin
+		case RS::ARRAY_CUSTOM0:
+			ERR_FAIL_COND(mesh->surfaces[p_surface]->attribute_buffer.is_null());
+			p_buffer = mesh->surfaces[p_surface]->attribute_buffer;
+			break;
+		case RS::ARRAY_CUSTOM1:
+			ERR_FAIL_COND(mesh->surfaces[p_surface]->skin_buffer.is_null());
+			p_buffer = mesh->surfaces[p_surface]->skin_buffer;
+			break;
+	}
+
+	RD::get_singleton()->buffer_update(p_buffer, p_offset, data_size, r);
+}
+
 void RendererStorageRD::mesh_surface_update_vertex_region(RID p_mesh, int p_surface, int p_offset, const Vector<uint8_t> &p_data) {
 	Mesh *mesh = mesh_owner.getornull(p_mesh);
 	ERR_FAIL_COND(!mesh);
