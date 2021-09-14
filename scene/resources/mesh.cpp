@@ -1559,6 +1559,12 @@ void ArrayMesh::surface_update_vertex_region(int p_surface, int p_offset, const 
 	emit_changed();
 }
 
+void ArrayMesh::surface_update_index_region(int p_surface, int p_offset, const Vector<uint8_t> &p_data) {
+	ERR_FAIL_INDEX(p_surface, surfaces.size());
+	RS::get_singleton()->mesh_surface_update_index_region(mesh, p_surface, p_offset, p_data);
+	emit_changed();
+}
+
 void ArrayMesh::surface_update_attribute_region(int p_surface, int p_offset, const Vector<uint8_t> &p_data) {
 	ERR_FAIL_INDEX(p_surface, surfaces.size());
 	RS::get_singleton()->mesh_surface_update_attribute_region(mesh, p_surface, p_offset, p_data);

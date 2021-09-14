@@ -285,6 +285,7 @@ public:
 	FUNC1RC(BlendShapeMode, mesh_get_blend_shape_mode, RID)
 
 	FUNC4(mesh_surface_update_vertex_region, RID, int, int, const Vector<uint8_t> &)
+	FUNC4(mesh_surface_update_index_region, RID, int, int, const Vector<uint8_t> &)
 	FUNC4(mesh_surface_update_attribute_region, RID, int, int, const Vector<uint8_t> &)
 	FUNC4(mesh_surface_update_skin_region, RID, int, int, const Vector<uint8_t> &)
 
