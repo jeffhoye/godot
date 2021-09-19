@@ -803,16 +803,33 @@ void EditorProperty::unhandled_key_input(const Ref<InputEvent> &p_event) {
 		return;
 	}
 
-	if (ED_IS_SHORTCUT("property_editor/copy_property", p_event)) {
-		menu_option(MENU_COPY_PROPERTY);
-		accept_event();
-	} else if (ED_IS_SHORTCUT("property_editor/paste_property", p_event) && !is_read_only()) {
-		menu_option(MENU_PASTE_PROPERTY);
-		accept_event();
-	} else if (ED_IS_SHORTCUT("property_editor/copy_property_path", p_event)) {
-		menu_option(MENU_COPY_PROPERTY_PATH);
-		accept_event();
+	const Ref<InputEventKey> k = p_event;
+
+	if (k.is_valid() && k->is_pressed()) {
+		if (ED_IS_SHORTCUT("property_editor/copy_property", p_event)) {
+			menu_option(MENU_COPY_PROPERTY);
+			accept_event();
+		} else if (ED_IS_SHORTCUT("property_editor/paste_property", p_event) && !is_read_only()) {
+			menu_option(MENU_PASTE_PROPERTY);
+			accept_event();
+		} else if (ED_IS_SHORTCUT("property_editor/copy_property_path", p_event)) {
+			menu_option(MENU_COPY_PROPERTY_PATH);
+			accept_event();
+		}
 	}
+}
+
+const Color *EditorProperty::_get_property_colors() {
+	const Color base = get_theme_color(SNAME("accent_color"), SNAME("Editor"));
+	const float saturation = base.get_s() * 0.75;
+	const float value = base.get_v();
+
+	static Color c[4];
+	c[0].set_hsv(0.0 / 3.0 + 0.05, saturation, value);
+	c[1].set_hsv(1.0 / 3.0 + 0.05, saturation, value);
+	c[2].set_hsv(2.0 / 3.0 + 0.05, saturation, value);
+	c[3].set_hsv(1.5 / 3.0 + 0.05, saturation, value);
+	return c;
 }
 
 void EditorProperty::set_label_reference(Control *p_control) {

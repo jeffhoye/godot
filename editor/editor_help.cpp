@@ -117,7 +117,7 @@ void EditorHelp::_class_desc_select(const String &p_select) {
 		} else {
 			if (table->has(link)) {
 				// Found in the current page
-				class_desc->scroll_to_line((*table)[link]);
+				class_desc->scroll_to_paragraph((*table)[link]);
 			} else {
 				if (topic == "class_enum") {
 					// Try to find the enum in @GlobalScope
@@ -480,7 +480,7 @@ void EditorHelp::_update_doc() {
 			}
 
 			class_desc->push_color(symbol_color);
-			class_desc->append_bbcode("[url=" + link + "]" + linktxt + "[/url]");
+			class_desc->append_text("[url=" + link + "]" + linktxt + "[/url]");
 			class_desc->pop();
 			class_desc->add_newline();
 		}
@@ -1180,9 +1180,9 @@ void EditorHelp::_update_doc() {
 				class_desc->add_text(" ");
 				class_desc->push_color(comment_color);
 				if (cd.is_script_doc) {
-					class_desc->append_bbcode(TTR("There is currently no description for this property."));
+					class_desc->append_text(TTR("There is currently no description for this property."));
 				} else {
-					class_desc->append_bbcode(TTR("There is currently no description for this property. Please help us by [color=$color][url=$url]contributing one[/url][/color]!").replace("$url", CONTRIBUTE_URL).replace("$color", link_color_text));
+					class_desc->append_text(TTR("There is currently no description for this property. Please help us by [color=$color][url=$url]contributing one[/url][/color]!").replace("$url", CONTRIBUTE_URL).replace("$color", link_color_text));
 				}
 				class_desc->pop();
 			}
@@ -1229,7 +1229,7 @@ void EditorHelp::_update_doc() {
 				class_desc->push_font(doc_font);
 				class_desc->push_indent(1);
 				if (methods_filtered[i].errors_returned.size()) {
-					class_desc->append_bbcode(TTR("Error codes returned:"));
+					class_desc->append_text(TTR("Error codes returned:"));
 					class_desc->add_newline();
 					class_desc->push_list(0, RichTextLabel::LIST_DOTS, false);
 					for (int j = 0; j < methods_filtered[i].errors_returned.size(); j++) {
@@ -1246,7 +1246,7 @@ void EditorHelp::_update_doc() {
 						}
 
 						class_desc->push_bold();
-						class_desc->append_bbcode(text);
+						class_desc->append_text(text);
 						class_desc->pop();
 					}
 					class_desc->pop();
@@ -1260,9 +1260,9 @@ void EditorHelp::_update_doc() {
 					class_desc->add_text(" ");
 					class_desc->push_color(comment_color);
 					if (cd.is_script_doc) {
-						class_desc->append_bbcode(TTR("There is currently no description for this method."));
+						class_desc->append_text(TTR("There is currently no description for this method."));
 					} else {
-						class_desc->append_bbcode(TTR("There is currently no description for this method. Please help us by [color=$color][url=$url]contributing one[/url][/color]!").replace("$url", CONTRIBUTE_URL).replace("$color", link_color_text));
+						class_desc->append_text(TTR("There is currently no description for this method. Please help us by [color=$color][url=$url]contributing one[/url][/color]!").replace("$url", CONTRIBUTE_URL).replace("$color", link_color_text));
 					}
 					class_desc->pop();
 				}
@@ -1345,7 +1345,7 @@ void EditorHelp::_help_callback(const String &p_topic) {
 		}
 	}
 
-	class_desc->call_deferred(SNAME("scroll_to_line"), line);
+	class_desc->call_deferred(SNAME("scroll_to_paragraph"), line);
 }
 
 static void _add_text_to_rt(const String &p_bbcode, RichTextLabel *p_rt) {
@@ -1612,6 +1612,11 @@ void EditorHelp::generate_doc() {
 	doc->merge_from(compdoc); //ensure all is up to date
 }
 
+void EditorHelp::_toggle_scripts_pressed() {
+	ScriptEditor::get_singleton()->toggle_scripts_panel();
+	update_toggle_scripts_button();
+}
+
 void EditorHelp::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_READY:
@@ -1622,7 +1627,11 @@ void EditorHelp::_notification(int p_what) {
 			if (is_inside_tree()) {
 				_class_desc_resized();
 			}
+			update_toggle_scripts_button();
 		} break;
+		case NOTIFICATION_VISIBILITY_CHANGED:
+			update_toggle_scripts_button();
+			break;
 		default:
 			break;
 	}
@@ -1653,7 +1662,7 @@ Vector<Pair<String, int>> EditorHelp::get_sections() {
 
 void EditorHelp::scroll_to_section(int p_section_index) {
 	int line = section_line[p_section_index].second;
-	class_desc->scroll_to_line(line);
+	class_desc->scroll_to_paragraph(line);
 }
 
 void EditorHelp::popup_search() {
@@ -1674,6 +1683,15 @@ int EditorHelp::get_scroll() const {
 
 void EditorHelp::set_scroll(int p_scroll) {
 	class_desc->get_v_scroll()->set_value(p_scroll);
+}
+
+void EditorHelp::update_toggle_scripts_button() {
+	if (is_layout_rtl()) {
+		toggle_scripts_button->set_icon(get_theme_icon(ScriptEditor::get_singleton()->is_scripts_panel_toggled() ? SNAME("Forward") : SNAME("Back"), SNAME("EditorIcons")));
+	} else {
+		toggle_scripts_button->set_icon(get_theme_icon(ScriptEditor::get_singleton()->is_scripts_panel_toggled() ? SNAME("Back") : SNAME("Forward"), SNAME("EditorIcons")));
+	}
+	toggle_scripts_button->set_tooltip(vformat("%s (%s)", TTR("Toggle Scripts Panel"), ED_GET_SHORTCUT("script_editor/toggle_scripts_panel")->get_as_text()));
 }
 
 void EditorHelp::_bind_methods() {
@@ -1705,6 +1723,16 @@ EditorHelp::EditorHelp() {
 	add_child(find_bar);
 	find_bar->hide();
 	find_bar->set_rich_text_label(class_desc);
+
+	status_bar = memnew(HBoxContainer);
+	add_child(status_bar);
+	status_bar->set_h_size_flags(SIZE_EXPAND_FILL);
+	status_bar->set_custom_minimum_size(Size2(0, 24 * EDSCALE));
+
+	toggle_scripts_button = memnew(Button);
+	toggle_scripts_button->set_flat(true);
+	toggle_scripts_button->connect("pressed", callable_mp(this, &EditorHelp::_toggle_scripts_pressed));
+	status_bar->add_child(toggle_scripts_button);
 
 	class_desc->set_selection_enabled(true);
 

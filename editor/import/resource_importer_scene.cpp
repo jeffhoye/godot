@@ -49,7 +49,7 @@
 #include "scene/resources/separation_ray_shape_3d.h"
 #include "scene/resources/sphere_shape_3d.h"
 #include "scene/resources/surface_tool.h"
-#include "scene/resources/world_margin_shape_3d.h"
+#include "scene/resources/world_boundary_shape_3d.h"
 
 uint32_t EditorSceneImporter::get_import_flags() const {
 	int ret;
@@ -387,8 +387,8 @@ Node *ResourceImporterScene::_pre_fix_node(Node *p_node, Node *p_root, Map<Ref<E
 				colshape->set_shape(rayShape);
 				Object::cast_to<Node3D>(sb)->rotate_x(Math_PI / 2);
 			} else if (empty_draw_type == "IMAGE") {
-				WorldMarginShape3D *world_margin_shape = memnew(WorldMarginShape3D);
-				colshape->set_shape(world_margin_shape);
+				WorldBoundaryShape3D *world_boundary_shape = memnew(WorldBoundaryShape3D);
+				colshape->set_shape(world_boundary_shape);
 			} else {
 				SphereShape3D *sphereShape = memnew(SphereShape3D);
 				sphereShape->set_radius(1);
@@ -414,8 +414,8 @@ Node *ResourceImporterScene::_pre_fix_node(Node *p_node, Node *p_root, Map<Ref<E
 				_pre_gen_shape_list(mesh, shapes, true);
 			}
 
-			RigidBody3D *rigid_body = memnew(RigidBody3D);
-			rigid_body->set_name(_fixstr(name, "rigid"));
+			RigidDynamicBody3D *rigid_body = memnew(RigidDynamicBody3D);
+			rigid_body->set_name(_fixstr(name, "rigid_body"));
 			p_node->replace_by(rigid_body);
 			rigid_body->set_transform(mi->get_transform());
 			p_node = rigid_body;
@@ -622,7 +622,7 @@ Node *ResourceImporterScene::_post_fix_node(Node *p_node, Node *p_root, Map<Ref<
 								base = col;
 							} break;
 							case MESH_PHYSICS_RIGID_BODY_AND_MESH: {
-								RigidBody3D *rigid_body = memnew(RigidBody3D);
+								RigidDynamicBody3D *rigid_body = memnew(RigidDynamicBody3D);
 								rigid_body->set_name(p_node->get_name());
 								p_node->replace_by(rigid_body);
 								rigid_body->set_transform(mi->get_transform() * get_collision_shapes_transform(node_settings));

@@ -2123,22 +2123,34 @@ GDScriptParser::ExpressionNode *GDScriptParser::parse_unary_operator(ExpressionN
 			operation->operation = UnaryOpNode::OP_NEGATIVE;
 			operation->variant_op = Variant::OP_NEGATE;
 			operation->operand = parse_precedence(PREC_SIGN, false);
+			if (operation->operand == nullptr) {
+				push_error(R"(Expected expression after "-" operator.)");
+			}
 			break;
 		case GDScriptTokenizer::Token::PLUS:
 			operation->operation = UnaryOpNode::OP_POSITIVE;
 			operation->variant_op = Variant::OP_POSITIVE;
 			operation->operand = parse_precedence(PREC_SIGN, false);
+			if (operation->operand == nullptr) {
+				push_error(R"(Expected expression after "+" operator.)");
+			}
 			break;
 		case GDScriptTokenizer::Token::TILDE:
 			operation->operation = UnaryOpNode::OP_COMPLEMENT;
 			operation->variant_op = Variant::OP_BIT_NEGATE;
 			operation->operand = parse_precedence(PREC_BIT_NOT, false);
+			if (operation->operand == nullptr) {
+				push_error(R"(Expected expression after "~" operator.)");
+			}
 			break;
 		case GDScriptTokenizer::Token::NOT:
 		case GDScriptTokenizer::Token::BANG:
 			operation->operation = UnaryOpNode::OP_LOGIC_NOT;
 			operation->variant_op = Variant::OP_NOT;
 			operation->operand = parse_precedence(PREC_LOGIC_NOT, false);
+			if (operation->operand == nullptr) {
+				push_error(vformat(R"(Expected expression after "%s" operator.)", op_type == GDScriptTokenizer::Token::NOT ? "not" : "!"));
+			}
 			break;
 		default:
 			return nullptr; // Unreachable.
@@ -2274,6 +2286,10 @@ GDScriptParser::ExpressionNode *GDScriptParser::parse_ternary_operator(Expressio
 	consume(GDScriptTokenizer::Token::ELSE, R"(Expected "else" after ternary operator condition.)");
 
 	operation->false_expr = parse_precedence(PREC_TERNARY, false);
+
+	if (operation->false_expr == nullptr) {
+		push_error(R"(Expected expression after "else".)");
+	}
 
 	return operation;
 }
@@ -2472,8 +2488,13 @@ GDScriptParser::ExpressionNode *GDScriptParser::parse_dictionary(ExpressionNode 
 
 			switch (dictionary->style) {
 				case DictionaryNode::LUA_TABLE:
-					if (key != nullptr && key->type != Node::IDENTIFIER) {
-						push_error("Expected identifier as LUA-style dictionary key.");
+					if (key != nullptr && key->type != Node::IDENTIFIER && key->type != Node::LITERAL) {
+						push_error("Expected identifier or string as LUA-style dictionary key.");
+						advance();
+						break;
+					}
+					if (key != nullptr && key->type == Node::LITERAL && static_cast<LiteralNode *>(key)->value.get_type() != Variant::STRING) {
+						push_error("Expected identifier or string as LUA-style dictionary key.");
 						advance();
 						break;
 					}
@@ -2487,7 +2508,11 @@ GDScriptParser::ExpressionNode *GDScriptParser::parse_dictionary(ExpressionNode 
 					}
 					if (key != nullptr) {
 						key->is_constant = true;
-						key->reduced_value = static_cast<IdentifierNode *>(key)->name;
+						if (key->type == Node::IDENTIFIER) {
+							key->reduced_value = static_cast<IdentifierNode *>(key)->name;
+						} else if (key->type == Node::LITERAL) {
+							key->reduced_value = StringName(static_cast<LiteralNode *>(key)->value.operator String());
+						}
 					}
 					break;
 				case DictionaryNode::PYTHON_DICT:
@@ -2566,6 +2591,10 @@ GDScriptParser::ExpressionNode *GDScriptParser::parse_subscript(ExpressionNode *
 
 	subscript->base = p_previous_operand;
 	subscript->index = parse_expression(false);
+
+	if (subscript->index == nullptr) {
+		push_error(R"(Expected expression after "[".)");
+	}
 
 	pop_multiline();
 	consume(GDScriptTokenizer::Token::BRACKET_CLOSE, R"(Expected "]" after subscription index.)");
@@ -3560,6 +3589,39 @@ String GDScriptParser::DataType::to_string() const {
 	}
 
 	ERR_FAIL_V_MSG("<unresolved type", "Kind set outside the enum range.");
+}
+
+static Variant::Type _variant_type_to_typed_array_element_type(Variant::Type p_type) {
+	switch (p_type) {
+		case Variant::PACKED_BYTE_ARRAY:
+		case Variant::PACKED_INT32_ARRAY:
+		case Variant::PACKED_INT64_ARRAY:
+			return Variant::INT;
+		case Variant::PACKED_FLOAT32_ARRAY:
+		case Variant::PACKED_FLOAT64_ARRAY:
+			return Variant::FLOAT;
+		case Variant::PACKED_STRING_ARRAY:
+			return Variant::STRING;
+		case Variant::PACKED_VECTOR2_ARRAY:
+			return Variant::VECTOR2;
+		case Variant::PACKED_VECTOR3_ARRAY:
+			return Variant::VECTOR3;
+		case Variant::PACKED_COLOR_ARRAY:
+			return Variant::COLOR;
+		default:
+			return Variant::NIL;
+	}
+}
+
+bool GDScriptParser::DataType::is_typed_container_type() const {
+	return kind == GDScriptParser::DataType::BUILTIN && _variant_type_to_typed_array_element_type(builtin_type) != Variant::NIL;
+}
+
+GDScriptParser::DataType GDScriptParser::DataType::get_typed_container_type() const {
+	GDScriptParser::DataType type;
+	type.kind = GDScriptParser::DataType::BUILTIN;
+	type.builtin_type = _variant_type_to_typed_array_element_type(builtin_type);
+	return type;
 }
 
 /*---------- PRETTY PRINT FOR DEBUG ----------*/
