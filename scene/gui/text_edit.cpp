@@ -1444,7 +1444,7 @@ void TextEdit::gui_input(const Ref<InputEvent> &p_gui_input) {
 			if (mb->get_button_index() == MOUSE_BUTTON_LEFT) {
 				_reset_caret_blink_timer();
 
-				Point2i pos = get_line_column_at_pos(Point2i(mpos.x, mpos.y));
+				Point2i pos = get_line_column_at_pos(mpos);
 				int row = pos.y;
 				int col = pos.x;
 
@@ -1547,7 +1547,7 @@ void TextEdit::gui_input(const Ref<InputEvent> &p_gui_input) {
 			if (mb->get_button_index() == MOUSE_BUTTON_RIGHT && context_menu_enabled) {
 				_reset_caret_blink_timer();
 
-				Point2i pos = get_line_column_at_pos(Point2i(mpos.x, mpos.y));
+				Point2i pos = get_line_column_at_pos(mpos);
 				int row = pos.y;
 				int col = pos.x;
 
@@ -3689,7 +3689,7 @@ void TextEdit::select_word_under_caret() {
 	int end = 0;
 	const Vector<Vector2i> words = TS->shaped_text_get_word_breaks(text.get_line_data(caret.line)->get_rid());
 	for (int i = 0; i < words.size(); i++) {
-		if (words[i].x <= caret.column && words[i].y >= caret.column) {
+		if ((words[i].x < caret.column && words[i].y > caret.column) || (i == words.size() - 1 && caret.column == words[i].y)) {
 			begin = words[i].x;
 			end = words[i].y;
 			break;
@@ -5385,7 +5385,7 @@ void TextEdit::_update_selection_mode_pointer() {
 	dragging_selection = true;
 	Point2 mp = get_local_mouse_pos();
 
-	Point2i pos = get_line_column_at_pos(Point2i(mp.x, mp.y));
+	Point2i pos = get_line_column_at_pos(mp);
 	int line = pos.y;
 	int col = pos.x;
 
@@ -5402,7 +5402,7 @@ void TextEdit::_update_selection_mode_word() {
 	dragging_selection = true;
 	Point2 mp = get_local_mouse_pos();
 
-	Point2i pos = get_line_column_at_pos(Point2i(mp.x, mp.y));
+	Point2i pos = get_line_column_at_pos(mp);
 	int line = pos.y;
 	int col = pos.x;
 
@@ -5411,7 +5411,7 @@ void TextEdit::_update_selection_mode_word() {
 	int end = beg;
 	Vector<Vector2i> words = TS->shaped_text_get_word_breaks(text.get_line_data(line)->get_rid());
 	for (int i = 0; i < words.size(); i++) {
-		if (words[i].x < caret_pos && words[i].y > caret_pos) {
+		if ((words[i].x < caret_pos && words[i].y > caret_pos) || (i == words.size() - 1 && caret_pos == words[i].y)) {
 			beg = words[i].x;
 			end = words[i].y;
 			break;
@@ -5450,7 +5450,7 @@ void TextEdit::_update_selection_mode_line() {
 	dragging_selection = true;
 	Point2 mp = get_local_mouse_pos();
 
-	Point2i pos = get_line_column_at_pos(Point2i(mp.x, mp.y));
+	Point2i pos = get_line_column_at_pos(mp);
 	int line = pos.y;
 	int col = pos.x;
 
@@ -5765,7 +5765,7 @@ void TextEdit::_update_minimap_hover() {
 		return;
 	}
 
-	const int row = get_minimap_line_at_pos(Point2i(mp.x, mp.y));
+	const int row = get_minimap_line_at_pos(mp);
 
 	const bool new_hovering_minimap = row >= get_first_visible_line() && row <= get_last_full_visible_line();
 	if (new_hovering_minimap != hovering_minimap) {
@@ -5786,7 +5786,7 @@ void TextEdit::_update_minimap_click() {
 	minimap_clicked = true;
 	dragging_minimap = true;
 
-	int row = get_minimap_line_at_pos(Point2i(mp.x, mp.y));
+	int row = get_minimap_line_at_pos(mp);
 
 	if (row >= get_first_visible_line() && (row < get_last_full_visible_line() || row >= (text.size() - 1))) {
 		minimap_scroll_ratio = v_scroll->get_as_ratio();

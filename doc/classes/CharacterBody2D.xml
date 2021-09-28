@@ -133,7 +133,7 @@
 		<member name="floor_max_angle" type="float" setter="set_floor_max_angle" getter="get_floor_max_angle" default="0.785398">
 			Maximum angle (in radians) where a slope is still considered a floor (or a ceiling), rather than a wall, when calling [method move_and_slide]. The default value equals 45 degrees.
 		</member>
-		<member name="floor_snap_length" type="float" setter="set_floor_snap_length" getter="get_floor_snap_length" default="0.0">
+		<member name="floor_snap_length" type="float" setter="set_floor_snap_length" getter="get_floor_snap_length" default="1.0">
 			Sets a snapping distance. When set to a value different from [code]0.0[/code], the body is kept attached to slopes when calling [method move_and_slide]. The snapping vector is determined by the given distance along the opposite direction of the [member up_direction].
 			As long as the snapping vector is in contact with the ground and the body moves against `up_direction`, the body will remain attached to the surface. Snapping is not applied if the body moves along `up_direction`, so it will be able to detach from the ground when jumping.
 		</member>
@@ -170,7 +170,7 @@
 			Apply when notions of walls, ceiling and floor are relevant. In this mode the body motion will react to slopes (acceleration/slowdown). This mode is suitable for sided games like platformers.
 		</constant>
 		<constant name="MOTION_MODE_FREE" value="1" enum="MotionMode">
-			Apply when there is no notion of floor or ceiling. All collisions will be reported as [code]on_wall[/code]. In this mode, when you slide, the speed will be always constant. This mode is suitable for top-down games.
+			Apply when there is no notion of floor or ceiling. All collisions will be reported as [code]on_wall[/code]. In this mode, when you slide, the speed will always be constant. This mode is suitable for top-down games.
 		</constant>
 	</constants>
 </class>
