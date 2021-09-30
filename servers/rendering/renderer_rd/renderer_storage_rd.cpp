@@ -2752,7 +2752,7 @@ RS::BlendShapeMode RendererStorageRD::mesh_get_blend_shape_mode(RID p_mesh) cons
 }
 
 void RendererStorageRD::mesh_surface_update_region(RID p_mesh, int p_surface, RS::ArrayType array_type, int p_offset, const Vector<uint8_t> &p_data, uint64_t data_offset, uint64_t data_size) {
-	Mesh *mesh = mesh_owner.getornull(p_mesh);
+	Mesh *mesh = mesh_owner.get_or_null(p_mesh);
 	ERR_FAIL_COND(!mesh);
 	ERR_FAIL_UNSIGNED_INDEX((uint32_t)p_surface, mesh->surface_count);
 	ERR_FAIL_COND(p_data.size() == 0);
@@ -2792,7 +2792,7 @@ void RendererStorageRD::mesh_surface_update_vertex_region(RID p_mesh, int p_surf
 }
 
 void RendererStorageRD::mesh_surface_update_index_region(RID p_mesh, int p_surface, int p_offset, const Vector<uint8_t> &p_data) {
-	Mesh *mesh = mesh_owner.getornull(p_mesh);
+	Mesh *mesh = mesh_owner.get_or_null(p_mesh);
 	ERR_FAIL_COND(!mesh);
 	ERR_FAIL_UNSIGNED_INDEX((uint32_t)p_surface, mesh->surface_count);
 	ERR_FAIL_COND(p_data.size() == 0);
