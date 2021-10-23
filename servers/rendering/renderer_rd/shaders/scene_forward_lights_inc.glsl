@@ -97,6 +97,11 @@ void light_compute(vec3 N, vec3 L, vec3 V, float A, vec3 light_color, float atte
 #endif
 		inout vec3 diffuse_light, inout vec3 specular_light) {
 
+	vec4 orms_unpacked = unpackUnorm4x8(orms);
+
+	float roughness = orms_unpacked.y;
+	float metallic = orms_unpacked.z;
+
 #if defined(LIGHT_CODE_USED)
 	// light is written by the light shader
 
@@ -125,9 +130,7 @@ void light_compute(vec3 N, vec3 L, vec3 V, float A, vec3 light_color, float atte
 	float cLdotH = clamp(A + dot(L, H), 0.0, 1.0);
 #endif
 
-	float metallic = unpackUnorm4x8(orms).z;
 	if (metallic < 1.0) {
-		float roughness = unpackUnorm4x8(orms).y;
 		float diffuse_brdf_NL; // BRDF times N.L for calculating diffuse radiance
 
 #if defined(DIFFUSE_LAMBERT_WRAP)
@@ -199,7 +202,6 @@ void light_compute(vec3 N, vec3 L, vec3 V, float A, vec3 light_color, float atte
 #endif //LIGHT_TRANSMITTANCE_USED
 	}
 
-	float roughness = unpackUnorm4x8(orms).y;
 	if (roughness > 0.0) { // FIXME: roughness == 0 should not disable specular light entirely
 
 		// D
@@ -211,7 +213,7 @@ void light_compute(vec3 N, vec3 L, vec3 V, float A, vec3 light_color, float atte
 		float blinn = pow(cNdotH, shininess);
 		blinn *= (shininess + 2.0) * (1.0 / (8.0 * M_PI));
 
-		specular_light += light_color * attenuation * specular_amount * blinn * f0 * unpackUnorm4x8(orms).w;
+		specular_light += light_color * attenuation * specular_amount * blinn * f0 * orms_unpacked.w;
 
 #elif defined(SPECULAR_PHONG)
 
@@ -221,7 +223,7 @@ void light_compute(vec3 N, vec3 L, vec3 V, float A, vec3 light_color, float atte
 		float phong = pow(cRdotV, shininess);
 		phong *= (shininess + 1.0) * (1.0 / (8.0 * M_PI));
 
-		specular_light += light_color * attenuation * specular_amount * phong * f0 * unpackUnorm4x8(orms).w;
+		specular_light += light_color * attenuation * specular_amount * phong * f0 * orms_unpacked.w;
 
 #elif defined(SPECULAR_TOON)
 
@@ -299,7 +301,7 @@ float sample_directional_pcf_shadow(texture2D shadow, vec2 shadow_pixel_size, ve
 	float depth = coord.z;
 
 	//if only one sample is taken, take it from the center
-	if (sc_directional_soft_shadow_samples == 1) {
+	if (sc_directional_soft_shadow_samples == 0) {
 		return textureProj(sampler2DShadow(shadow, shadow_sampler), vec4(pos, depth, 1.0));
 	}
 
@@ -325,7 +327,7 @@ float sample_pcf_shadow(texture2D shadow, vec2 shadow_pixel_size, vec3 coord) {
 	float depth = coord.z;
 
 	//if only one sample is taken, take it from the center
-	if (sc_soft_shadow_samples == 1) {
+	if (sc_soft_shadow_samples == 0) {
 		return textureProj(sampler2DShadow(shadow, shadow_sampler), vec4(pos, depth, 1.0));
 	}
 
@@ -348,7 +350,7 @@ float sample_pcf_shadow(texture2D shadow, vec2 shadow_pixel_size, vec3 coord) {
 
 float sample_omni_pcf_shadow(texture2D shadow, float blur_scale, vec2 coord, vec4 uv_rect, vec2 flip_offset, float depth) {
 	//if only one sample is taken, take it from the center
-	if (sc_soft_shadow_samples == 1) {
+	if (sc_soft_shadow_samples == 0) {
 		vec2 pos = coord * 0.5 + 0.5;
 		pos = uv_rect.xy + pos * uv_rect.zw;
 		return textureProj(sampler2DShadow(shadow, shadow_sampler), vec4(pos, depth, 1.0));

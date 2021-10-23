@@ -42,6 +42,7 @@ class ProjectSettings : public Object {
 
 public:
 	typedef Map<String, Variant> CustomMap;
+	static const String PROJECT_DATA_DIR_NAME_SUFFIX;
 
 	enum {
 		//properties that are not for built in values begin from this value, so builtin ones are displayed first
@@ -92,6 +93,8 @@ protected:
 	Map<StringName, StringName> feature_overrides;
 
 	OrderedHashMap<StringName, AutoloadInfo> autoloads;
+
+	String project_data_dir_name;
 
 	bool _set(const StringName &p_name, const Variant &p_value);
 	bool _get(const StringName &p_name, Variant &r_ret) const;
